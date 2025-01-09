@@ -1,0 +1,25 @@
+name: Testing
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+env:
+  DEFAULT_PYTHON: "3.12"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
+      - name : Setup Python
+        uses: actions/setup-python@v2
+      - name: Install Poetry
+        run: pipx install Poetry
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: Run pytest
+        run: poetry run pytest tests/test.py
