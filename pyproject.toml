@@ -13,9 +13,10 @@ classifiers = [
 keywords = ["IOmeter", "smart meter", "energy", "automation"]
 homepage = "https://iometer.de/"
 repository = "https://github.com/iometer-gmbh/iometer.py"
+documentation = "https://github.com/iometer-gmbh/iometer.py/blob/main/docs/index.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.12"
 aiohttp = ">=3.0.0"
 yarl = ">=1.6.0"
 
@@ -27,7 +28,6 @@ aioresponses = "0.7.7"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
