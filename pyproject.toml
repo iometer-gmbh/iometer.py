@@ -16,8 +16,8 @@ repository = "https://github.com/iometer-gmbh/iometer.py"
 documentation = "https://github.com/iometer-gmbh/iometer.py/blob/main/docs/index.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
-aiohttp = ">=3.0.0"
+python = "^3.10"
+aiohttp = "^3.0.0"
 yarl = ">=1.6.0"
 
 [tool.poetry.group.dev.dependencies]

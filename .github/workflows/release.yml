@@ -1,4 +1,4 @@
-name: Publish to Test PyPI
+name: Publish to PyPI
 on:
   workflow_dispatch:
 
@@ -19,8 +19,8 @@ jobs:
       - name: Build package
         run: poetry build --no-interaction
       - name: Set test PyPi repository
-        run: poetry config repositories.testpypi https://test.pypi.org/legacy/
+        run: poetry config repositories.pypi https://test.pypi.org/legacy/
       - name: Add token
-        run: poetry config pypi-token.testpypi ${{ secrets.TEST_PYPI_API_KEY }}
+        run: poetry config pypi-token.pypi ${{ secrets.PYPI_API_KEY }}
       - name: Publish package
-        run: poetry publish -r testpypi
+        run: poetry publish
