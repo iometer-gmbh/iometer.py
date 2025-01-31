@@ -175,3 +175,6 @@ curl --url "http://192.168.1.100/v1/status" \
   --header "User-Agent: curl/8.10.1" \
   --header "Accept: application/json"
 ```
+
+## Discovery
+The IOmeter bridge can be found on networks that support [mDNS](https://en.wikipedia.org/wiki/Multicast_DNS). The fully qualified service type name is `_iometer._tcp.local.`. Prominient Python modules to discover devices are for instance [python-zeroconf](https://python-zeroconf.readthedocs.io). 
