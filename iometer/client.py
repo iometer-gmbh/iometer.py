@@ -51,26 +51,36 @@ class IOmeterClient:
             "Accept": "application/json",
         }
 
-        try:
-            async with asyncio.timeout(self.request_timeout):
-                response = await self.session.get(url, headers=headers)
-                response.raise_for_status()
+        max_retries = 3
+        last_error = None
+
+        for attempt in range(max_retries):
+            try:
+                async with asyncio.timeout(self.request_timeout):
+                    response = await self.session.get(url, headers=headers)
+                    response.raise_for_status()
                 return await response.text()
 
-        except asyncio.TimeoutError as error:
+            except (asyncio.TimeoutError, ClientResponseError, Exception) as error:
+                last_error = error
+                if attempt == max_retries - 1:  # Last attempt
+                    break
+                # Continue to next attempt for retryable errors
+                await asyncio.sleep(0.5 * (attempt + 1))  # Optional: backoff delay
+
+        # All retries exhausted, raise the last error
+        if isinstance(last_error, asyncio.TimeoutError):
             raise IOmeterTimeoutError(
-                "Timeout while communicating with IOmeter bridge"
-            ) from error
-
-        except ClientResponseError as error:
+                f"All {max_retries} attempts failed: Timeout"
+            ) from last_error
+        elif isinstance(last_error, ClientResponseError):
             raise IOmeterConnectionError(
-                f"Bridge returned error {error.status}: {error.message}"
-            ) from error
-
-        except Exception as error:
+                f"All {max_retries} attempts failed: {last_error.status}"
+            ) from last_error
+        else:
             raise IOmeterConnectionError(
-                f"Error communicating with IOmeter bridge: {str(error)}"
-            ) from error
+                f"All {max_retries} attempts failed: {str(last_error)}"
+            ) from last_error
 
     async def get_current_reading(self) -> Reading:
         """Get current reading from IOmeter bridge.
