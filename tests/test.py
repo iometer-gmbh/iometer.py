@@ -31,6 +31,43 @@ def reading_json_fixture():
     }
 
 
+@pytest.fixture(name="reading_alt_obis_json")
+def reading_alt_obis_json_fixture():
+    """Fixture reading response with alternate current power OBIS only."""
+    return {
+        "__typename": "iometer.reading.v1",
+        "meter": {
+            "number": "1ISK0000000000",
+            "reading": {
+                "time": "2024-11-11T11:11:11Z",
+                "registers": [
+                    {"obis": "01-00:01.08.00*ff", "value": 1111.1, "unit": "Wh"},
+                    {"obis": "01-00:02.08.00*ff", "value": 2222.2, "unit": "Wh"},
+                    {"obis": "01-00:24.07.00*ff", "value": 200, "unit": "W"},
+                ],
+            },
+        },
+    }
+
+
+@pytest.fixture(name="reading_no_power_obis_json")
+def reading_no_power_obis_json_fixture():
+    """Fixture reading response without any current power OBIS registers."""
+    return {
+        "__typename": "iometer.reading.v1",
+        "meter": {
+            "number": "1ISK0000000000",
+            "reading": {
+                "time": "2024-11-11T11:11:11Z",
+                "registers": [
+                    {"obis": "01-00:01.08.00*ff", "value": 3333.3, "unit": "Wh"},
+                    {"obis": "01-00:02.08.00*ff", "value": 4444.4, "unit": "Wh"},
+                ],
+            },
+        },
+    }
+
+
 @pytest.fixture(name="status_json")
 def status_json_fixture():
     """ "Fixture status response"""
@@ -182,6 +219,32 @@ async def test_get_current_reading(client_iometer, mock_aioresponse, reading_jso
     assert reading.get_total_consumption() == 1234.5
     assert reading.get_total_production() == 5432.1
     assert reading.get_current_power() == 100
+
+
+@pytest.mark.asyncio
+async def test_get_current_reading_alt_obis(
+    client_iometer, mock_aioresponse, reading_alt_obis_json
+):
+    """Test current power using alternate OBIS when primary is missing."""
+    mock_endpoint = f"http://{HOST}/v1/reading"
+    mock_aioresponse.get(mock_endpoint, status=200, payload=reading_alt_obis_json)
+
+    reading = await client_iometer.get_current_reading()
+    assert isinstance(reading, Reading)
+    assert reading.get_current_power() == 200
+
+
+@pytest.mark.asyncio
+async def test_get_current_reading_no_power_obis(
+    client_iometer, mock_aioresponse, reading_no_power_obis_json
+):
+    """Test current power returns None when no power OBIS registers are present."""
+    mock_endpoint = f"http://{HOST}/v1/reading"
+    mock_aioresponse.get(mock_endpoint, status=200, payload=reading_no_power_obis_json)
+
+    reading = await client_iometer.get_current_reading()
+    assert isinstance(reading, Reading)
+    assert reading.get_current_power() is None
 
 
 @pytest.mark.asyncio

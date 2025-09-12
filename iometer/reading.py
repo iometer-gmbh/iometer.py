@@ -46,6 +46,7 @@ class Reading:
     TOTAL_CONSUMPTION_OBIS = "01-00:01.08.00*ff"
     TOTAL_PRODUCTION_OBIS = "01-00:02.08.00*ff"
     CURRENT_POWER_OBIS = "01-00:10.07.00*ff"
+    CURRENT_POWER_OBIS_ALT = "01-00:24.07.00*ff"
 
     @classmethod
     def from_json(cls, json_str: str) -> "Reading":
@@ -104,10 +105,21 @@ class Reading:
         register = self.meter.reading.get_register_by_obis(self.TOTAL_PRODUCTION_OBIS)
         return register.value if register else 0
 
-    def get_current_power(self) -> float:
-        """Get current power consumption in W."""
+    def get_current_power(self) -> float | None:
+        """Get current power consumption in W.
+
+        Prefer 10.07.00 OBIS, it is missing in some meters.
+        These meters falsely report 24.07.00 OBIS as current power.
+
+        Returns None if neither OBIS is found, otherwise the value in W as float.
+        """
         register = self.meter.reading.get_register_by_obis(self.CURRENT_POWER_OBIS)
-        return register.value if register else 0
+        if register:
+            return register.value
+        register_alt = self.meter.reading.get_register_by_obis(
+            self.CURRENT_POWER_OBIS_ALT
+        )
+        return register_alt.value if register_alt else None
 
     def __str__(self) -> str:
         return self.to_json()
