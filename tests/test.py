@@ -7,14 +7,14 @@ from aioresponses import aioresponses
 from iometer.client import IOmeterClient
 from iometer.exceptions import IOmeterConnectionError, IOmeterTimeoutError
 from iometer.reading import Reading
-from iometer.status import Status
+from iometer.status import NullMeter, Status
 
 HOST = "192.168.1.100"
 
 
 @pytest.fixture(name="reading_json")
 def reading_json_fixture():
-    """Sample reading JSON response."""
+    """Fixture reading response."""
     return {
         "__typename": "iometer.reading.v1",
         "meter": {
@@ -57,7 +57,7 @@ def status_json_fixture():
 
 @pytest.fixture(name="status_wired_json")
 def status_wired_json_fixture():
-    """ "Fixture status response"""
+    """ "Fixture status response with wired power"""
     return {
         "__typename": "iometer.status.v1",
         "meter": {
@@ -79,8 +79,8 @@ def status_wired_json_fixture():
 
 
 @pytest.fixture(name="status_detached_json")
-def status_deatached_json_fixture():
-    """ "Fixture status response"""
+def status_detached_json_fixture():
+    """ "Fixture status response with detached core"""
     return {
         "__typename": "iometer.status.v1",
         "meter": {
@@ -102,7 +102,7 @@ def status_deatached_json_fixture():
 
 @pytest.fixture(name="status_disconnected_json")
 def status_disconnected_json_fixture():
-    """ "Fixture status response"""
+    """ "Fixture status response with disconnected core"""
     return {
         "__typename": "iometer.status.v1",
         "meter": {
@@ -112,6 +112,26 @@ def status_disconnected_json_fixture():
             "bridge": {"rssi": -30, "version": "build-65"},
             "id": "658c2b34-2017-45f2-a12b-731235f8bb97",
             "core": {"connectionStatus": "disconnected"},
+        },
+    }
+
+
+@pytest.fixture(name="status_no_meter_json")
+def status_no_meter_json_fixture():
+    """ "Fixture status response"""
+    return {
+        "__typename": "iometer.status.v1",
+        "device": {
+            "bridge": {"rssi": -30, "version": "build-65"},
+            "id": "658c2b34-2017-45f2-a12b-731235f8bb97",
+            "core": {
+                "connectionStatus": "connected",
+                "rssi": -30,
+                "version": "build-58",
+                "powerStatus": "battery",
+                "batteryLevel": 100,
+                "attachmentStatus": "attached",
+            },
         },
     }
 
@@ -259,6 +279,32 @@ async def test_get_current_status_disconnected(
     assert status.device.core.power_status is None
     assert status.device.core.battery_level is None
     assert status.device.core.attachment_status is None
+    assert status.device.core.pin_status is None
+
+
+@pytest.mark.asyncio
+async def test_get_current_status_no_meter(
+    client_iometer, mock_aioresponse, status_no_meter_json
+):
+    """Test getting device status."""
+
+    mock_endpoint = f"http://{HOST}/v1/status"
+    mock_aioresponse.get(mock_endpoint, status=200, payload=status_no_meter_json)
+
+    status = await client_iometer.get_current_status()
+
+    assert isinstance(status, Status)
+    assert isinstance(status.meter, NullMeter)
+    assert status.meter.number is None
+    assert status.device.bridge.rssi == -30
+    assert status.device.bridge.version == "build-65"
+    assert status.device.id == "658c2b34-2017-45f2-a12b-731235f8bb97"
+    assert status.device.core.connection_status == "connected"
+    assert status.device.core.rssi == -30
+    assert status.device.core.version == "build-58"
+    assert status.device.core.power_status == "battery"
+    assert status.device.core.battery_level == 100
+    assert status.device.core.attachment_status == "attached"
     assert status.device.core.pin_status is None
 
 

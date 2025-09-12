@@ -1,7 +1,7 @@
 """Device status for IOmeter bridge and core"""
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -38,15 +38,25 @@ class Device:
 class Meter:
     """Represents the meter device."""
 
-    number: str
+    number: str | None
+
+
+class NullMeter(Meter):
+    """Null Object for Meter to avoid None-attribute errors."""
+
+    def __init__(self) -> None:
+        super().__init__(number=None)
+
+    def __bool__(self) -> bool:
+        return False
 
 
 @dataclass
 class Status:
     """Top level class representing the complete device status"""
 
-    meter: Meter
     device: Device
+    meter: Meter = field(default_factory=NullMeter)
     typename: str = "iometer.status.v1"
 
     @classmethod
@@ -76,7 +86,10 @@ class Status:
         # Create device
         device = Device(bridge=bridge, id=data["device"]["id"], core=core)
 
-        meter = Meter(number=data["meter"]["number"])
+        # Create meter (use Null Object if missing)
+        meter = (
+            Meter(number=data["meter"]["number"]) if data.get("meter") else NullMeter()
+        )
 
         # Create full status
         return cls(meter=meter, device=device)
@@ -86,7 +99,8 @@ class Status:
         return json.dumps(
             {
                 "__typename": self.typename,
-                "meter": {"number": self.meter.number},
+                # If meter is a NullMeter, serialize as null
+                "meter": {"number": self.meter.number} if self.meter else None,
                 "device": {
                     "bridge": {
                         "rssi": self.device.bridge.rssi,
