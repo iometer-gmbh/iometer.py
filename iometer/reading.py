@@ -95,15 +95,18 @@ class Reading:
             }
         )
 
-    def get_total_consumption(self) -> float:
+    def get_total_consumption(self) -> float | None:
         """Get total consumption in Wh."""
         register = self.meter.reading.get_register_by_obis(self.TOTAL_CONSUMPTION_OBIS)
-        return register.value if register else 0
+        return register.value if register else None
 
-    def get_total_production(self) -> float:
-        """Get total production in Wh."""
+    def get_total_production(self) -> float | None:
+        """Get total production in Wh.
+
+        Returns None if OBIS is not found, otherwise the value in Wh as float.
+        """
         register = self.meter.reading.get_register_by_obis(self.TOTAL_PRODUCTION_OBIS)
-        return register.value if register else 0
+        return register.value if register else None
 
     def get_current_power(self) -> float | None:
         """Get current power consumption in W.
