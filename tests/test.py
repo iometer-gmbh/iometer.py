@@ -5,7 +5,12 @@ from aiohttp import ClientResponseError, ClientSession
 from aioresponses import aioresponses
 
 from iometer.client import IOmeterClient
-from iometer.exceptions import IOmeterConnectionError, IOmeterTimeoutError
+from iometer.exceptions import (
+    IOmeterConnectionError,
+    IOmeterNoReadingsError,
+    IOmeterNoStatusError,
+    IOmeterTimeoutError,
+)
 from iometer.reading import Reading
 from iometer.status import NullMeter, Status
 
@@ -428,3 +433,25 @@ async def test_client_error(client_iometer, mock_aioresponse):
     mock_aioresponse.get(mock_endpoint, exception=ClientResponseError)
     with pytest.raises(IOmeterConnectionError, match="Error communicating"):
         await client_iometer.get_current_reading()
+
+
+@pytest.mark.asyncio
+async def test_reading_not_found(client_iometer, mock_aioresponse):
+    """Test that a 404 on the reading endpoint raises IOmeterNoReadingsError."""
+
+    mock_endpoint = f"http://{HOST}/v1/reading"
+    mock_aioresponse.get(mock_endpoint, status=404)
+
+    with pytest.raises(IOmeterNoReadingsError, match="No readings available"):
+        await client_iometer.get_current_reading()
+
+
+@pytest.mark.asyncio
+async def test_status_not_found(client_iometer, mock_aioresponse):
+    """Test that a 404 on the status endpoint raises IOmeterNoStatusError."""
+
+    mock_endpoint = f"http://{HOST}/v1/status"
+    mock_aioresponse.get(mock_endpoint, status=404)
+
+    with pytest.raises(IOmeterNoStatusError, match="No status available"):
+        await client_iometer.get_current_status()

@@ -7,7 +7,12 @@ from typing import Optional, Self
 from aiohttp import ClientResponseError, ClientSession
 from yarl import URL
 
-from .exceptions import IOmeterConnectionError, IOmeterTimeoutError
+from .exceptions import (
+    IOmeterConnectionError,
+    IOmeterNoReadingsError,
+    IOmeterNoStatusError,
+    IOmeterTimeoutError,
+)
 from .reading import Reading
 from .status import Status
 
@@ -63,6 +68,19 @@ class IOmeterClient:
             ) from error
 
         except ClientResponseError as error:
+            # Map 404 responses to more specific exceptions depending on the
+            # requested endpoint so callers can handle "no data" cases.
+            if error.status == 404:
+                if uri.endswith("v1/reading") or "/reading" in uri:
+                    raise IOmeterNoReadingsError(
+                        "No readings available from IOmeter bridge"
+                    ) from error
+                if uri.endswith("v1/status") or "/status" in uri:
+                    raise IOmeterNoStatusError(
+                        "No status available from IOmeter bridge"
+                    ) from error
+
+            # For other HTTP errors, raise a generic connection error.
             raise IOmeterConnectionError(
                 f"Bridge returned error {error.status}: {error.message}"
             ) from error
