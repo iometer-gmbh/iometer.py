@@ -10,8 +10,12 @@ class IOmeterConnectionError(IOmeterError):
 
 
 class IOmeterTimeoutError(IOmeterError):
-    """IOmeter client and bridge timeout exception"""
+    """IOmeter client and bridge timeout exception."""
 
 
-class IOmeterParseError(IOmeterError):
-    """IOmeter parse exception."""
+class IOmeterNoReadingsError(IOmeterError):
+    """No readings available exception."""
+
+
+class IOmeterNoStatusError(IOmeterError):
+    """No status available exception."""
