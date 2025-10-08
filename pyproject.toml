@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "iometer"
-version = "0.1.0"
+version = "0.2.0"
 description = "Asynchronous Python client for IOmeter"
-authors = ["MaestroOnICe <justus@iometer.de>"]
+authors = ["jukrebs <justus@iometer.de>"]
 license = "MIT"
 readme = "README.md"
 classifiers = [
