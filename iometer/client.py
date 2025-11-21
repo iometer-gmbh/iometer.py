@@ -33,7 +33,7 @@ class IOmeterClient:
     """
 
     host: str
-    request_timeout: int = 5
+    request_timeout: int = 60
     session: Optional[ClientSession] = None
 
     async def _request(self, uri: str) -> str:
