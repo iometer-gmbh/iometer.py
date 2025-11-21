@@ -216,7 +216,7 @@ async def test_client_initialization():
     """Test client initialization."""
     client = IOmeterClient("test-host")
     assert client.host == "test-host"
-    assert client.request_timeout == 5
+    assert client.request_timeout == 60
     assert client.session is None
 
 
@@ -322,7 +322,7 @@ async def test_get_current_status_wired(
     mock_endpoint = f"http://{HOST}/v1/status"
     mock_aioresponse.get(mock_endpoint, status=200, payload=status_wired_json)
 
-    status = await client_iometer.get_current_status()
+    status = await client_iometer.get_current_status()  
 
     assert isinstance(status, Status)
     assert status.meter.number == "1ISK0000000000"
