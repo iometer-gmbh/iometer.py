@@ -47,6 +47,8 @@ class Reading:
     TOTAL_PRODUCTION_OBIS = "01-00:02.08.00*ff"
     CURRENT_POWER_OBIS = "01-00:10.07.00*ff"
     CURRENT_POWER_OBIS_ALT = "01-00:24.07.00*ff"
+    CONSUMPTION_TARIFF_T1_OBIS = "01-00:01.08.01*ff"
+    CONSUMPTION_TARIFF_T2_OBIS = "01-00:01.08.02*ff"
 
     @classmethod
     def from_json(cls, json_str: str) -> "Reading":
@@ -106,6 +108,27 @@ class Reading:
         Returns None if OBIS is not found, otherwise the value in Wh as float.
         """
         register = self.meter.reading.get_register_by_obis(self.TOTAL_PRODUCTION_OBIS)
+        return register.value if register else None
+    
+        
+    def get_consumption_tariff_T1(self) -> float | None:
+        """Get consumption for tariff T1 in Wh.
+
+        Look for OBIS code 1.8.1. Not all meters report this value.
+
+        Returns None if neither OBIS is found, otherwise the value in W as float.
+        """
+        register = self.meter.reading.get_register_by_obis(self.CONSUMPTION_TARIFF_T1_OBIS)
+        return register.value if register else None
+
+    def get_consumption_tariff_T2(self) -> float | None:
+        """Get consumption for tariff T2 in Wh.
+
+        Look for OBIS code 1.8.2. Not all meters report this value.
+
+        Returns None if neither OBIS is found, otherwise the value in Wh as float.
+        """
+        register = self.meter.reading.get_register_by_obis(self.CONSUMPTION_TARIFF_T2_OBIS)
         return register.value if register else None
 
     def get_current_power(self) -> float | None:
